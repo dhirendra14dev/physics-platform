@@ -49,8 +49,8 @@
 </form>
 
 <script>
-    // Simple Timer
-    let timeLimit = {{ quiz.time_limit_minutes }} * 60;
+    // Timer with server-side persistence
+    let timeLimit = {{ remaining_seconds }};
     const timerDisplay = document.createElement('div');
     timerDisplay.style.position = 'fixed';
     timerDisplay.style.top = '10px';
@@ -58,6 +58,8 @@
     timerDisplay.style.background = '#333';
     timerDisplay.style.color = '#fff';
     timerDisplay.style.padding = '10px';
+    timerDisplay.style.borderRadius = '5px';
+    timerDisplay.style.fontWeight = 'bold';
     document.body.appendChild(timerDisplay);
 
     const interval = setInterval(() => {
@@ -67,6 +69,7 @@
 
         if (timeLimit <= 0) {
             clearInterval(interval);
+            alert('Time is up! Submitting quiz...');
             document.getElementById('quizForm').submit();
         }
         timeLimit--;

@@ -13,10 +13,36 @@ def dashboard(request):
 @login_required
 def take_quiz(request, quiz_id):
     quiz = get_object_or_404(Quiz, pk=quiz_id)
-    # Check if already attempted? For practice, maybe allow multiple attempts.
+    
+    # Get or create an active attempt for this user and quiz
+    attempt = Attempt.objects.filter(
+        user=request.user, 
+        quiz=quiz, 
+        completed_at__isnull=True
+    ).first()
+    
+    if not attempt:
+        # Create new attempt
+        attempt = Attempt.objects.create(user=request.user, quiz=quiz)
+    
+    # Calculate remaining time
+    elapsed_seconds = (timezone.now() - attempt.started_at).total_seconds()
+    total_seconds = quiz.time_limit_minutes * 60
+    remaining_seconds = max(0, int(total_seconds - elapsed_seconds))
+    
+    # If time has expired, auto-submit
+    if remaining_seconds <= 0:
+        attempt.completed_at = timezone.now()
+        attempt.save()
+        return redirect('result', attempt_id=attempt.id)
     
     questions = quiz.questions.all().prefetch_related('options')
-    return render(request, 'quiz/take_quiz.html', {'quiz': quiz, 'questions': questions})
+    return render(request, 'quiz/take_quiz.html', {
+        'quiz': quiz, 
+        'questions': questions,
+        'attempt': attempt,
+        'remaining_seconds': remaining_seconds
+    })
 
 @login_required
 def submit_quiz(request, quiz_id):
@@ -26,8 +52,18 @@ def submit_quiz(request, quiz_id):
     quiz = get_object_or_404(Quiz, pk=quiz_id)
     questions = quiz.questions.all()
     
+    # Get the active attempt
+    attempt = Attempt.objects.filter(
+        user=request.user,
+        quiz=quiz,
+        completed_at__isnull=True
+    ).first()
+    
+    if not attempt:
+        # If no active attempt, redirect to dashboard
+        return redirect('dashboard')
+    
     score = 0
-    attempt = Attempt.objects.create(user=request.user, quiz=quiz)
     
     for question in questions:
         user_answer = request.POST.getlist(f'question_{question.id}')
