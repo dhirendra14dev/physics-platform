@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Dashboard</h2>
+
+<h3>Available Quizzes</h3>
+{% if quizzes %}
+<ul>
+    {% for quiz in quizzes %}
+    <li>
+        <strong>{{ quiz.title }}</strong> - {{ quiz.time_limit_minutes }} mins
+        <a href="{% url 'take_quiz' quiz.id %}" class="btn">Start Quiz</a>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>No quizzes available.</p>
+{% endif %}
+
+<h3>My Attempts</h3>
+{% if attempts %}
+<ul>
+    {% for attempt in attempts %}
+    <li>{{ attempt.quiz.title }} - Score: {{ attempt.score }} - {{ attempt.started_at }}</li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>No attempts yet.</p>
+{% endif %}
+
+<form action="{% url 'logout' %}" method="post"
+    style="margin-top: 2rem; border-top: 1px solid #eee; padding-top: 1rem;">
+    {% csrf_token %}
+    <button type="submit" class="btn" style="background-color: #6c757d;">Logout</button>
+</form>
+{% endblock %}

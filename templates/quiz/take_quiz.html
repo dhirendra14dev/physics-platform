@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>{{ quiz.title }}</h2>
+<p>Time Limit: {{ quiz.time_limit_minutes }} minutes</p>
+
+<form action="{% url 'submit_quiz' quiz.id %}" method="post" id="quizForm">
+    {% csrf_token %}
+
+    {% for question in questions %}
+    <div class="question-block" style="margin-bottom: 2rem; padding: 1rem; border: 1px solid #eee;">
+        <p><strong>Q{{ forloop.counter }}.</strong> {{ question.text }}</p>
+        {% if question.image %}
+        <img src="{{ question.image.url }}" alt="Question Image" style="max-width: 100%;">
+        {% endif %}
+
+        <div class="options">
+            {% if question.question_type == 'MCQ_SINGLE' %}
+            {% for option in question.options.all %}
+            <div>
+                <label>
+                    <input type="radio" name="question_{{ question.id }}" value="{{ option.id }}">
+                    {{ option.text }}
+                    {% if option.image %}
+                    <img src="{{ option.image.url }}" alt="Option Image" style="max-width: 200px;">
+                    {% endif %}
+                </label>
+            </div>
+            {% endfor %}
+            {% elif question.question_type == 'MCQ_MULTI' %}
+            {% for option in question.options.all %}
+            <div>
+                <label>
+                    <input type="checkbox" name="question_{{ question.id }}" value="{{ option.id }}">
+                    {{ option.text }}
+                </label>
+            </div>
+            {% endfor %}
+            {% elif question.question_type == 'NUMERICAL' %}
+            <input type="number" step="any" name="question_{{ question.id }}" placeholder="Enter numerical answer">
+            {% elif question.question_type == 'MATRIX' %}
+            <p><em>Matrix match not fully implemented in UI yet.</em></p>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+
+    <button type="submit" class="btn">Submit Quiz</button>
+</form>
+
+<script>
+    // Simple Timer
+    let timeLimit = {{ quiz.time_limit_minutes }} * 60;
+    const timerDisplay = document.createElement('div');
+    timerDisplay.style.position = 'fixed';
+    timerDisplay.style.top = '10px';
+    timerDisplay.style.right = '10px';
+    timerDisplay.style.background = '#333';
+    timerDisplay.style.color = '#fff';
+    timerDisplay.style.padding = '10px';
+    document.body.appendChild(timerDisplay);
+
+    const interval = setInterval(() => {
+        let minutes = Math.floor(timeLimit / 60);
+        let seconds = timeLimit % 60;
+        timerDisplay.innerText = `Time Left: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+        if (timeLimit <= 0) {
+            clearInterval(interval);
+            document.getElementById('quizForm').submit();
+        }
+        timeLimit--;
+    }, 1000);
+</script>
+{% endblock %}
