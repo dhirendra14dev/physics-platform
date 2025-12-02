@@ -17,11 +17,49 @@ class Question(models.Model):
         MATRIX = 'MATRIX', 'Matrix Match'
         TRUE_FALSE = 'TRUE_FALSE', 'True/False'
 
+    CHAPTER_CHOICES = [
+        ('VECTORS', 'Vectors'),
+        ('KINEMATICS_1D', 'Kinematics - 1D'),
+        ('KINEMATICS_2D', 'Kinematics - 2D'),
+        ('NEWTONS_LAWS', "Newton's Laws of Motion"),
+        ('FRICTION', 'Friction'),
+        ('CIRCULAR_MOTION', 'Circular Motion'),
+        ('WORK_POWER_ENERGY', 'Work, Power and Energy'),
+        ('COM_MOMENTUM', 'Center of Mass and Conservation of Linear Momentum'),
+        ('ROTATIONAL_MOTION', 'Rotational Motion'),
+        ('GRAVITATION', 'Gravitation'),
+        ('FLUID_DYNAMICS', 'Fluid Dynamics'),
+        ('MECHANICAL_PROPERTIES', 'Mechanical Properties of Matter'),
+        ('SHM', 'Simple Harmonic Motion'),
+        ('WAVE_MOTION', 'Wave Motion'),
+        ('HEAT_THERMODYNAMICS', 'Heat and Thermodynamics'),
+        ('ELECTROSTATICS', 'Electrostatics'),
+        ('CURRENT_ELECTRICITY', 'Current Electricity'),
+        ('CAPACITANCE', 'Capacitance'),
+        ('MAGNETISM', 'Magnetism'),
+        ('EMI', 'Electromagnetic Induction'),
+        ('AC', 'Alternating Current'),
+        ('GEOMETRICAL_OPTICS', 'Geometrical Optics'),
+        ('WAVE_OPTICS', 'Wave Optics'),
+        ('MODERN_PHYSICS', 'Modern Physics'),
+    ]
+
+    DIFFICULTY_CHOICES = [
+        ('VERY_EASY', 'Very Easy'),
+        ('EASY', 'Easy'),
+        ('MODERATE', 'Moderate'),
+        ('DIFFICULT', 'Difficult'),
+        ('VERY_DIFFICULT', 'Very Difficult'),
+    ]
+
     text = models.TextField(help_text="Question text (LaTeX supported)")
     image = models.ImageField(upload_to='questions/', blank=True, null=True)
-    marks = models.FloatField(default=4.0)
-    negative_marks = models.FloatField(default=1.0)
     question_type = models.CharField(max_length=20, choices=Type.choices)
+    
+    # New Fields
+    chapter = models.CharField(max_length=50, choices=CHAPTER_CHOICES, blank=True, null=True)
+    subtopic = models.CharField(max_length=200, blank=True, null=True)
+    difficulty = models.CharField(max_length=20, choices=DIFFICULTY_CHOICES, default='MODERATE')
     
     # For Numerical
     numerical_answer = models.FloatField(blank=True, null=True)
@@ -54,7 +92,7 @@ class Option(models.Model):
 class Quiz(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
-    questions = models.ManyToManyField(Question)
+    questions = models.ManyToManyField(Question, through='QuizQuestion')
     time_limit_minutes = models.IntegerField(default=60)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -76,3 +114,16 @@ class Response(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     # Store answer as JSON to handle multiple options, numerical values, or matrix matches
     answer_data = models.JSONField(null=True, blank=True)
+
+class QuizQuestion(models.Model):
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    marks = models.FloatField(default=4.0)
+    negative_marks = models.FloatField(default=1.0)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
+
+    def __str__(self):
+        return f"{self.quiz.title} - {self.question}"

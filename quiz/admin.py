@@ -1,25 +1,36 @@
+import nested_admin
 from django.contrib import admin
-from .models import Question, Option, Quiz, Passage, Attempt
+from .models import Question, Option, Quiz, Passage, Attempt, QuizQuestion
 
-class OptionInline(admin.TabularInline):
+class OptionInline(nested_admin.NestedTabularInline):
     model = Option
     extra = 4
 
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
-    list_display = ('text', 'question_type', 'marks')
-    list_filter = ('question_type',)
+    list_display = ('text', 'question_type', 'chapter', 'difficulty')
+    list_filter = ('question_type', 'chapter', 'difficulty')
     inlines = [OptionInline]
     search_fields = ('text',)
+
+class QuizQuestionInline(admin.TabularInline):
+    model = QuizQuestion
+    extra = 1
 
 @admin.register(Quiz)
 class QuizAdmin(admin.ModelAdmin):
     list_display = ('title', 'time_limit_minutes', 'created_at')
-    filter_horizontal = ('questions',)
+    inlines = [QuizQuestionInline]
+
+class QuestionInline(nested_admin.NestedStackedInline):
+    model = Question
+    extra = 1
+    inlines = [OptionInline]
 
 @admin.register(Passage)
-class PassageAdmin(admin.ModelAdmin):
+class PassageAdmin(nested_admin.NestedModelAdmin):
     list_display = ('title', 'text')
+    inlines = [QuestionInline]
 
 @admin.register(Attempt)
 class AttemptAdmin(admin.ModelAdmin):
