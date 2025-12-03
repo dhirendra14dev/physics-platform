@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
-from .models import Quiz, Attempt, Question, Response, Option
+from .models import Quiz, Attempt, Question, Response, Option, QuizQuestion
 import json
 
 @login_required
@@ -65,11 +65,12 @@ def submit_quiz(request, quiz_id):
     
     score = 0
     
-    for question in questions:
+    # Iterate over QuizQuestion to get marks/negative_marks
+    quiz_questions = QuizQuestion.objects.filter(quiz=quiz).select_related('question')
+    
+    for qq in quiz_questions:
+        question = qq.question
         user_answer = request.POST.getlist(f'question_{question.id}')
-        # For Matrix, it might be different keys, e.g. question_{id}_row_{row_id}
-        # But let's assume we handle that in frontend to submit a JSON or structured data
-        # For MVP, let's handle basic types first.
         
         is_correct = False
         answer_data = user_answer
@@ -80,10 +81,10 @@ def submit_quiz(request, quiz_id):
                 try:
                     option = Option.objects.get(id=selected_option_id)
                     if option.is_correct:
-                        score += question.marks
+                        score += qq.marks
                         is_correct = True
                     else:
-                        score -= question.negative_marks
+                        score -= qq.negative_marks
                 except Option.DoesNotExist:
                     pass
                     
@@ -92,10 +93,10 @@ def submit_quiz(request, quiz_id):
             selected_ids = set(user_answer)
             correct_ids = set(str(o.id) for o in question.options.filter(is_correct=True))
             if selected_ids == correct_ids:
-                score += question.marks
+                score += qq.marks
                 is_correct = True
             elif selected_ids: # If attempted but wrong
-                score -= question.negative_marks
+                score -= qq.negative_marks
 
         elif question.question_type == Question.Type.NUMERICAL:
             if user_answer and user_answer[0]:
@@ -104,14 +105,49 @@ def submit_quiz(request, quiz_id):
                     correct_val = question.numerical_answer
                     tolerance = question.numerical_tolerance
                     if correct_val is not None and abs(val - correct_val) <= tolerance:
-                        score += question.marks
+                        score += qq.marks
                         is_correct = True
                     else:
-                        score -= question.negative_marks
+                        score -= qq.negative_marks
                 except ValueError:
                     pass
 
-        # TODO: Implement Matrix and Comprehension logic
+        elif question.question_type == Question.Type.MATRIX:
+            # Matrix Match Logic
+            # Expected answer format: {"A": ["p", "q"], "B": ["r"]}
+            # User submission: question_{id}_row_{row_id} -> [col_id, ...]
+            
+            if question.matrix_config and 'rows' in question.matrix_config and 'correct' in question.matrix_config:
+                user_matrix_answer = {}
+                rows_correct_count = 0
+                
+                for row in question.matrix_config['rows']:
+                    row_id = row['id']
+                    # Get user selected cols for this row
+                    user_selected_cols = request.POST.getlist(f'question_{question.id}_row_{row_id}')
+                    user_matrix_answer[row_id] = user_selected_cols
+                    
+                    correct_cols = set(question.matrix_config['correct'].get(row_id, []))
+                    user_cols = set(user_selected_cols)
+                    
+                    if correct_cols == user_cols:
+                        rows_correct_count += 1
+                
+                answer_data = user_matrix_answer
+                
+                # Scoring: +2 for each correct row
+                score += (rows_correct_count * 2.0)
+                
+                # Determine if the question is "fully" correct for is_correct flag
+                # (Optional, but good for stats)
+                if rows_correct_count == len(question.matrix_config['rows']):
+                    is_correct = True
+                else:
+                    is_correct = False
+                    
+                # No negative marking for Matrix Match as per requirement
+
+        # TODO: Implement Comprehension logic
         
         Response.objects.create(
             attempt=attempt,
