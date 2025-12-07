@@ -15,6 +15,7 @@ class Question(models.Model):
         MCQ_MULTI = 'MCQ_MULTI', 'Multi Correct MCQ'
         NUMERICAL = 'NUMERICAL', 'Numerical'
         MATRIX = 'MATRIX', 'Matrix Match'
+        MATRIX_SINGLE = 'MATRIX_SINGLE', 'Matrix Single'
         TRUE_FALSE = 'TRUE_FALSE', 'True/False'
 
     CHAPTER_CHOICES = [
@@ -75,10 +76,30 @@ class Question(models.Model):
     #   "cols": [{"id": "p", "text": "Col p"}, ...],
     #   "correct": {"A": ["p", "q"], "B": ["r"]}
     # }
-    matrix_config = models.JSONField(blank=True, null=True, help_text="JSON configuration for Matrix Match")
+    matrix_config = models.JSONField(blank=True, null=True, help_text="DEPRECATED: Use MatrixRow/MatrixCol models instead")
 
     def __str__(self):
         return f"{self.get_question_type_display()}: {self.text[:50]}"
+
+class MatrixRow(models.Model):
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='matrix_rows')
+    label = models.CharField(max_length=10, help_text="e.g. A, B, C")
+    text = models.CharField(max_length=1000, blank=True)
+    image = models.ImageField(upload_to='matrix_rows/', blank=True, null=True)
+    # Comma separated correct matches for this row (e.g. "p,q") - mostly for MATRIX type
+    matches = models.CharField(max_length=50, blank=True, help_text="Comma-separated IDs of correct columns (e.g. p,q)")
+
+    def __str__(self):
+        return f"{self.label}: {self.text}"
+
+class MatrixCol(models.Model):
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='matrix_cols')
+    label = models.CharField(max_length=10, help_text="e.g. p, q, r")
+    text = models.CharField(max_length=1000, blank=True)
+    image = models.ImageField(upload_to='matrix_cols/', blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.label}: {self.text}"
 
 class Option(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='options')

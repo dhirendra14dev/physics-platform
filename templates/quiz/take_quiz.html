@@ -39,6 +39,7 @@
             {% elif question.question_type == 'NUMERICAL' %}
             <input type="number" step="any" name="question_{{ question.id }}" placeholder="Enter numerical answer">
             {% elif question.question_type == 'MATRIX' %}
+            {% with rows=question.matrix_rows.all cols=question.matrix_cols.all %}
             <div class="matrix-container" style="overflow-x: auto;">
                 <table style="width: 100%; border-collapse: collapse;">
                     <thead>
@@ -50,6 +51,17 @@
                     <tbody>
                         <tr>
                             <td style="vertical-align: top; width: 50%; border: 1px solid #ddd; padding: 8px;">
+                                {% if rows %}
+                                {% for row in rows %}
+                                <div style="margin-bottom: 10px;">
+                                    <strong>{{ row.label }}.</strong> {{ row.text }}
+                                    {% if row.image %}
+                                    <br><img src="{{ row.image.url }}" style="max-width: 150px;">
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                                {% else %}
+                                <!-- Fallback for JSON config -->
                                 {% for row in question.matrix_config.rows %}
                                 <div style="margin-bottom: 10px;">
                                     <strong>{{ row.id }}.</strong> {{ row.text }}
@@ -58,8 +70,20 @@
                                     {% endif %}
                                 </div>
                                 {% endfor %}
+                                {% endif %}
                             </td>
                             <td style="vertical-align: top; width: 50%; border: 1px solid #ddd; padding: 8px;">
+                                {% if cols %}
+                                {% for col in cols %}
+                                <div style="margin-bottom: 10px;">
+                                    <strong>{{ col.label }}.</strong> {{ col.text }}
+                                    {% if col.image %}
+                                    <br><img src="{{ col.image.url }}" style="max-width: 150px;">
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                                {% else %}
+                                <!-- Fallback for JSON config -->
                                 {% for col in question.matrix_config.cols %}
                                 <div style="margin-bottom: 10px;">
                                     <strong>{{ col.id }}.</strong> {{ col.text }}
@@ -68,35 +92,129 @@
                                     {% endif %}
                                 </div>
                                 {% endfor %}
+                                {% endif %}
                             </td>
                         </tr>
                     </tbody>
                 </table>
-                
+
                 <h4 style="margin-top: 1rem;">Select Matches:</h4>
                 <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
                     <thead>
                         <tr>
                             <th style="border: 1px solid #ddd; padding: 8px;">Row \ Col</th>
+                            {% if cols %}
+                            {% for col in cols %}
+                            <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">{{ col.label }}</th>
+                            {% endfor %}
+                            {% else %}
                             {% for col in question.matrix_config.cols %}
                             <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">{{ col.id }}</th>
                             {% endfor %}
+                            {% endif %}
                         </tr>
                     </thead>
                     <tbody>
+                        {% if rows %}
+                        {% for row in rows %}
+                        <tr>
+                            <td style="border: 1px solid #ddd; padding: 8px;"><strong>{{ row.label }}</strong></td>
+                            {% for col in cols %}
+                            <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">
+                                <input type="checkbox" name="question_{{ question.id }}_row_{{ row.label }}"
+                                    value="{{ col.label }}">
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                        {% else %}
                         {% for row in question.matrix_config.rows %}
                         <tr>
                             <td style="border: 1px solid #ddd; padding: 8px;"><strong>{{ row.id }}</strong></td>
                             {% for col in question.matrix_config.cols %}
                             <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">
-                                <input type="checkbox" name="question_{{ question.id }}_row_{{ row.id }}" value="{{ col.id }}">
+                                <input type="checkbox" name="question_{{ question.id }}_row_{{ row.id }}"
+                                    value="{{ col.id }}">
                             </td>
                             {% endfor %}
                         </tr>
                         {% endfor %}
+                        {% endif %}
                     </tbody>
                 </table>
             </div>
+            {% endwith %}
+            {% elif question.question_type == 'MATRIX_SINGLE' %}
+            {% with rows=question.matrix_rows.all cols=question.matrix_cols.all %}
+            <div class="matrix-container" style="overflow-x: auto; margin-bottom: 1rem;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th style="border: 1px solid #ddd; padding: 8px;">Column I</th>
+                            <th style="border: 1px solid #ddd; padding: 8px;">Column II</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="vertical-align: top; width: 50%; border: 1px solid #ddd; padding: 8px;">
+                                {% if rows %}
+                                {% for row in rows %}
+                                <div style="margin-bottom: 10px;">
+                                    <strong>{{ row.label }}.</strong> {{ row.text }}
+                                    {% if row.image %}
+                                    <br><img src="{{ row.image.url }}" style="max-width: 150px;">
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                                {% else %}
+                                <!-- Fallback for JSON config -->
+                                {% for row in question.matrix_config.rows %}
+                                <div style="margin-bottom: 10px;">
+                                    <strong>{{ row.id }}.</strong> {{ row.text }}
+                                    {% if row.image %}
+                                    <br><img src="{{ row.image }}" style="max-width: 150px;">
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                                {% endif %}
+                            </td>
+                            <td style="vertical-align: top; width: 50%; border: 1px solid #ddd; padding: 8px;">
+                                {% if cols %}
+                                {% for col in cols %}
+                                <div style="margin-bottom: 10px;">
+                                    <strong>{{ col.label }}.</strong> {{ col.text }}
+                                    {% if col.image %}
+                                    <br><img src="{{ col.image.url }}" style="max-width: 150px;">
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                                {% else %}
+                                <!-- Fallback for JSON config -->
+                                {% for col in question.matrix_config.cols %}
+                                <div style="margin-bottom: 10px;">
+                                    <strong>{{ col.id }}.</strong> {{ col.text }}
+                                    {% if col.image %}
+                                    <br><img src="{{ col.image }}" style="max-width: 150px;">
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            {% endwith %} {% for option in question.options.all %}
+            <div>
+                <label>
+                    <input type="radio" name="question_{{ question.id }}" value="{{ option.id }}">
+                    {{ option.text }}
+                    {% if option.image %}
+                    <img src="{{ option.image.url }}" alt="Option Image" style="max-width: 200px;">
+                    {% endif %}
+                </label>
+            </div>
+            {% endfor %}
             {% endif %}
         </div>
     </div>
