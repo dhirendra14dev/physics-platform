@@ -24,7 +24,7 @@
             <select name="type">
                 <option value="">All Types</option>
                 {% for code, name in types.items %}
-                <option value="{{ code }}" {% if selected_type == code %}selected{% endif %}>{{ name }}</option>
+                <option value="{{ code }}" {% if selected_type==code %}selected{% endif %}>{{ name }}</option>
                 {% endfor %}
             </select>
         </div>
@@ -33,7 +33,7 @@
             <select name="chapter">
                 <option value="">All Chapters</option>
                 {% for code, name in chapters.items %}
-                <option value="{{ code }}" {% if selected_chapter == code %}selected{% endif %}>{{ name }}</option>
+                <option value="{{ code }}" {% if selected_chapter==code %}selected{% endif %}>{{ name }}</option>
                 {% endfor %}
             </select>
         </div>
@@ -42,7 +42,7 @@
             <select name="difficulty">
                 <option value="">All Levels</option>
                 {% for code, name in difficulties.items %}
-                <option value="{{ code }}" {% if selected_difficulty == code %}selected{% endif %}>{{ name }}</option>
+                <option value="{{ code }}" {% if selected_difficulty==code %}selected{% endif %}>{{ name }}</option>
                 {% endfor %}
             </select>
         </div>
@@ -83,9 +83,8 @@
         <div
             style="background: #f8fafc; padding: 1rem 1.75rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
             <div style="display: flex; gap: 10px; align-items: center;">
-                <span class="badge"
-                    style="background: white; border: 1px solid var(--border); color: var(--text-secondary); font-weight: 700;">Q.{{
-                    q.id }}</span>
+                style="background: white; border: 1px solid var(--border); color: var(--text-secondary); font-weight:
+                700;">Q.{{ q.id }}</span>
                 <span
                     style="font-weight: 700; color: var(--primary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">{{
                     q.get_question_type_display }}</span>
