@@ -121,6 +121,7 @@ class Quiz(models.Model):
     passages = models.ManyToManyField('Passage', blank=True, help_text="Select passages to add all their questions to the quiz automatically.")
     assigned_groups = models.ManyToManyField('auth.Group', related_name='quizzes', blank=True, help_text="Batches/Groups this quiz is assigned to")
     assigned_students = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='assigned_quizzes', blank=True, help_text="Individual students this quiz is assigned to")
+    is_public = models.BooleanField(default=False, help_text="If true, visible to everyone; otherwise only assigned students/groups.")
     time_limit_minutes = models.IntegerField(default=60)
     created_at = models.DateTimeField(auto_now_add=True)
 

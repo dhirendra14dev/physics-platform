@@ -35,8 +35,19 @@ class QuizQuestionInline(admin.TabularInline):
 
 @admin.register(Quiz)
 class QuizAdmin(admin.ModelAdmin):
-    list_display = ('title', 'time_limit_minutes', 'created_at')
+    list_display = ('title', 'is_public', 'time_limit_minutes', 'created_at')
+    list_filter = ('is_public', 'created_at')
+    filter_horizontal = ('assigned_groups', 'assigned_students')
     inlines = [QuizQuestionInline]
+    fieldsets = (
+        (None, {
+            'fields': ('title', 'description', 'time_limit_minutes', 'is_public')
+        }),
+        ('Assignments', {
+            'fields': ('assigned_groups', 'assigned_students'),
+            'description': "Leave both empty and 'Is Public' as False to keep it hidden, or set 'Is Public' to True for all users."
+        }),
+    )
 
 class QuestionInline(nested_admin.NestedStackedInline):
     model = Question

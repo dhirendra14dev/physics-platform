@@ -1,13 +1,21 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib import messages
 from django.utils import timezone
 from .models import Quiz, Attempt, Question, Response, Option, QuizQuestion, Passage
-from django.db.models import Subquery, OuterRef
+from django.db.models import Subquery, OuterRef, Q
 import json, random
 
 @login_required
 def dashboard(request):
-    quizzes = Quiz.objects.all()
+    if request.user.is_staff:
+        quizzes = Quiz.objects.all().distinct()
+    else:
+        quizzes = Quiz.objects.filter(
+            Q(is_public=True) |
+            Q(assigned_students=request.user) |
+            Q(assigned_groups__in=request.user.groups.all())
+        ).distinct()
     attempts = Attempt.objects.filter(user=request.user).select_related('quiz').order_by('-started_at')
     
     # Grouping attempts by quiz while maintaining recent order
@@ -28,6 +36,13 @@ def dashboard(request):
 @login_required
 def take_quiz(request, quiz_id):
     quiz = get_object_or_404(Quiz, pk=quiz_id)
+    
+    # Check assignment permissions
+    if not (request.user.is_staff or quiz.is_public or 
+            quiz.assigned_students.filter(id=request.user.id).exists() or 
+            quiz.assigned_groups.filter(id__in=request.user.groups.all().values_list('id', flat=True)).exists()):
+        messages.error(request, 'You are not assigned to this quiz.')
+        return redirect('dashboard')
     
     # Get or create an active attempt for this user and quiz
     attempt = Attempt.objects.filter(
@@ -62,6 +77,14 @@ def take_quiz(request, quiz_id):
 @login_required
 def take_quiz_single(request, quiz_id, question_index=1):
     quiz = get_object_or_404(Quiz, pk=quiz_id)
+    
+    # Check assignment permissions
+    if not (request.user.is_staff or quiz.is_public or 
+            quiz.assigned_students.filter(id=request.user.id).exists() or 
+            quiz.assigned_groups.filter(id__in=request.user.groups.all().values_list('id', flat=True)).exists()):
+        messages.error(request, 'You are not assigned to this quiz.')
+        return redirect('dashboard')
+    
     attempt = Attempt.objects.filter(user=request.user, quiz=quiz, completed_at__isnull=True).first()
     
     if not attempt:
@@ -622,8 +645,10 @@ def create_test(request):
         new_quiz = Quiz.objects.create(
             title=quiz_title,
             description=f"Generated on {timezone.now().strftime('%Y-%m-%d %H:%M')}",
-            time_limit_minutes=time_limit
+            time_limit_minutes=time_limit,
+            is_public=False # Custom tests are private by default
         )
+        new_quiz.assigned_students.add(request.user)
         
         # Add questions to quiz
         for i, q in enumerate(selected_questions, 1):
