@@ -374,8 +374,7 @@
                             <span class="ar-label" style="color: #166534;">Correct Answer</span>
                             <p class="num-val" style="color: #166534;">
                                 {{ res.question.numerical_answer }}
-                                <span style="font-size: 0.9rem; font-weight: 400;">(+/- {{
-                                    res.question.numerical_tolerance }})</span>
+                                <span style="font-size: 0.9rem; font-weight: 400;">(+/- {{ res.question.numerical_tolerance }})</span>
                             </p>
                         </div>
                     </div>
@@ -416,8 +415,7 @@
                             <h6 style="color: #166534; margin: 0 0 0.5rem 0;">Correct Matches:</h6>
                             <ul style="margin: 0; padding-left: 1.2rem; color: #15803d;">
                                 {% for row in res.question.matrix_rows.all %}
-                                <li style="margin-bottom: 0.25rem;"><strong>{{ row.label }}</strong> &rarr; {{
-                                    row.matches }}</li>
+                                <li style="margin-bottom: 0.25rem;"><strong>{{ row.label }}</strong> &rarr; {{ row.matches }}</li>
                                 {% endfor %}
                             </ul>
                         </div>

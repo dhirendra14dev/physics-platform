@@ -464,9 +464,9 @@
     }
 </style>
 <div class="quiz-layout">
-    <div class="main-question-area" id="mainArea" data-s="{{remaining_seconds|default:0}}">
+    <div class="main-question-area" id="mainArea" data-s="{{ remaining_seconds|default:0 }}">
         <div class="header-bar">
-            <div style="font-size:1.25rem;font-weight:700">Question {{index}} of {{total}}</div>
+            <div style="font-size:1.25rem;font-weight:700">Question {{ index }} of {{ total }}</div>
             <div class="timer-pill" id="timerBox">--:--</div>
         </div>
         <form method="post" id="qForm" class="question-content">
@@ -474,30 +474,30 @@
             {% if question.passage %}
             <div class="passage-box">
                 <h4 style="margin-top: 0; color: #3b82f6; margin-bottom: 12px;">{{ question.passage.title }}</h4>
-                {{question.passage.text|linebreaksbr}}
+                {{ question.passage.text|linebreaksbr }}
                 {% if question.passage.image %}
                 <div style="text-align:center; margin-top:20px;">
-                    <img src="{{question.passage.image.url}}"
+                    <img src="{{ question.passage.image.url }}"
                         style="max-width:100%; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                 </div>
                 {% endif %}
             </div>
             {% endif %}
 
-            <div class="question-text">{{question.text|linebreaksbr}}</div>
+            <div class="question-text">{{ question.text|linebreaksbr }}</div>
 
             {% if question.image %}
             <div style="text-align:center;margin:24px 0">
-                <img src="{{question.image.url}}"
+                <img src="{{ question.image.url }}"
                     style="max-width:100%;max-height:500px;border-radius:12px;box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
             </div>
             {% endif %}
             {% if question.question_type == 'ASSERTION_REASON' %}
             <div style="display:grid;gap:16px;margin-bottom:24px">
                 <div style="background:#f8fafc;padding:16px;border-radius:8px;border:1px solid #e2e8f0"><b>Assertion
-                        (A)</b>: {{question.assertion}}</div>
+                        (A)</b>: {{ question.assertion }}</div>
                 <div style="background:#f8fafc;padding:16px;border-radius:8px;border:1px solid #e2e8f0"><b>Reason
-                        (R)</b>: {{question.reason}}</div>
+                        (R)</b>: {{ question.reason }}</div>
             </div>
             {% endif %}
             <div class="options-grid">
@@ -550,9 +550,9 @@
                     {% for o in question.options.all %}
                     {% with oid=o.id|stringformat:"s" %}
                     <label class="option-card {% if response.answer_data.0 == oid %}selected{% endif %}">
-                        <input type="radio" name="question_{{question.id}}" value="{{o.id}}" {% if response.answer_data.0 == oid %}checked{% endif %} onchange="upd(this)">
+                        <input type="radio" name="question_{{ question.id }}" value="{{ o.id }}" {% if response.answer_data.0 == oid %}checked{% endif %} onchange="upd(this)">
                         <div class="radio-circle"></div>
-                        <div style="flex:1">{{o.text}}{% if o.image %}<br><img src="{{o.image.url}}"
+                        <div style="flex:1">{{ o.text }}{% if o.image %}<br><img src="{{ o.image.url }}"
                                 style="max-height:150px">{% endif %}</div>
                     </label>
                     {% endwith %}
@@ -564,9 +564,9 @@
                     {% for o in question.options.all %}
                     {% with oid=o.id|stringformat:"s" %}
                     <label class="option-card {% if oid in response.answer_data %}selected{% endif %}">
-                        <input type="checkbox" name="question_{{question.id}}" value="{{o.id}}" {% if oid in response.answer_data %}checked{% endif %} onchange="upd(this)">
+                        <input type="checkbox" name="question_{{ question.id }}" value="{{ o.id }}" {% if oid in response.answer_data %}checked{% endif %} onchange="upd(this)">
                         <div class="checkbox-square"></div>
-                        <div style="flex:1">{{o.text}}{% if o.image %}<br><img src="{{o.image.url}}"
+                        <div style="flex:1">{{ o.text }}{% if o.image %}<br><img src="{{ o.image.url }}"
                                 style="max-height:150px">{% endif %}</div>
                     </label>
                     {% endwith %}
@@ -577,8 +577,8 @@
                 <div style="background: #f8fafc; padding: 24px; border-radius: 12px; border: 2px solid #e2e8f0;">
                     <label style="font-weight: 700; margin-bottom: 12px; display: block; color: #475569;">Enter
                         Numerical Answer:</label>
-                    <input type="number" step="any" name="question_{{question.id}}"
-                        value="{{response.answer_data.0|default:''}}" placeholder="0.00"
+                    <input type="number" step="any" name="question_{{ question.id }}"
+                        value="{{ response.answer_data.0|default:'' }}" placeholder="0.00"
                         style="padding: 16px; border: 2px solid #3b82f6; border-radius: 8px; width: 100%; font-size: 1.25rem; font-weight: 600;">
                 </div>
 
@@ -629,16 +629,14 @@
                                     <th style="padding: 12px; background: white; border-bottom: 2px solid #e2e8f0;">Row
                                         \ Col</th>
                                     {% for col in cols %}
-                                    <th style="padding: 12px; background: white; border-bottom: 2px solid #e2e8f0;">{{
-                                        col.label }}</th>
+                                    <th style="padding: 12px; background: white; border-bottom: 2px solid #e2e8f0;">{{ col.label }}</th>
                                     {% endfor %}
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for row in rows %}
                                 <tr>
-                                    <td style="padding: 12px; font-weight: 700; border-bottom: 1px solid #f1f5f9;">{{
-                                        row.label }}</td>
+                                    <td style="padding: 12px; font-weight: 700; border-bottom: 1px solid #f1f5f9;">{{ row.label }}</td>
                                     {% for col in cols %}
                                     <td style="padding: 12px; border-bottom: 1px solid #f1f5f9;">
                                         <input type="checkbox" name="question_{{ question.id }}_row_{{ row.label }}" value="{{ col.label }}" {% with row_ans=response.answer_data|dict_get:row.label %}{% if col.label in row_ans %}checked{% endif %}{% endwith %} style="width: 20px; height: 20px; cursor: pointer; accent-color: #3b82f6;">
@@ -679,23 +677,23 @@
         <div class="sidebar-card">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
                 <div style="display:flex;align-items:center;gap:8px">
-                    <div class="stat-num bg-a">{{stats.ANSWERED}}</div>Ans
+                    <div class="stat-num bg-a">{{ stats.ANSWERED }}</div>Ans
                 </div>
                 <div style="display:flex;align-items:center;gap:8px">
-                    <div class="stat-num bg-na">{{stats.NOT_ANSWERED}}</div>N-Ans
+                    <div class="stat-num bg-na">{{ stats.NOT_ANSWERED }}</div>N-Ans
                 </div>
                 <div style="display:flex;align-items:center;gap:8px">
                     <div class="stat-num bg-nv" style="background:#fff;border:1px solid #ccc;color:#000">
-                        {{stats.NOT_VISITED}}</div>N-Vis
+                        {{ stats.NOT_VISITED }}</div>N-Vis
                 </div>
                 <div style="display:flex;align-items:center;gap:8px">
-                    <div class="stat-num bg-m">{{stats.MARKED_FOR_REVIEW}}</div>Mark
+                    <div class="stat-num bg-m">{{ stats.MARKED_FOR_REVIEW }}</div>Mark
                 </div>
             </div>
             <div class="palette-grid">
                 {% for itm in palette %}
                 <a href="{% url 'take_quiz_single' quiz.id itm.index %}"
-                    class="palette-item {% if itm.status == 'NOT_VISITED' %}bg-nv{% elif itm.status == 'NOT_ANSWERED' %}bg-na{% elif itm.status == 'ANSWERED' %}bg-a{% elif itm.status == 'MARKED_FOR_REVIEW' %}bg-m{% elif itm.status == 'ANSWERED_MARKED' %}bg-ma{% endif %} {% if itm.is_current %}active{% endif %}">{{itm.index}}</a>
+                    class="palette-item {% if itm.status == 'NOT_VISITED' %}bg-nv{% elif itm.status == 'NOT_ANSWERED' %}bg-na{% elif itm.status == 'ANSWERED' %}bg-a{% elif itm.status == 'MARKED_FOR_REVIEW' %}bg-m{% elif itm.status == 'ANSWERED_MARKED' %}bg-ma{% endif %} {% if itm.is_current %}active{% endif %}">{{ itm.index }}</a>
                 {% endfor %}
             </div>
         </div>
