@@ -1,6 +1,6 @@
 import nested_admin
 from django.contrib import admin
-from .models import Question, Option, Quiz, Passage, Attempt, QuizQuestion, MatrixRow, MatrixCol
+from .models import Question, Option, Quiz, Passage, Attempt, QuizQuestion, MatrixRow, MatrixCol, SolutionBlock
 
 class OptionInline(nested_admin.NestedTabularInline):
     model = Option
@@ -16,11 +16,17 @@ class MatrixColInline(nested_admin.NestedTabularInline):
     extra = 2
     fields = ('label', 'text', 'image')
 
+class SolutionBlockInline(nested_admin.NestedTabularInline):
+    model = SolutionBlock
+    extra = 1
+    fields = ('text', 'image', 'order')
+    sortable_field_name = "order"
+
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
-    list_display = ('text', 'question_type', 'chapter', 'difficulty')
-    list_filter = ('question_type', 'chapter', 'difficulty')
-    inlines = [MatrixRowInline, MatrixColInline, OptionInline]
+    list_display = ('text', 'question_type', 'chapter', 'difficulty', 'allow_partial_marking')
+    list_filter = ('question_type', 'chapter', 'difficulty', 'allow_partial_marking')
+    inlines = [MatrixRowInline, MatrixColInline, OptionInline, SolutionBlockInline]
     search_fields = ('text',)
 
 class QuizQuestionInline(admin.TabularInline):
@@ -35,7 +41,7 @@ class QuizAdmin(admin.ModelAdmin):
 class QuestionInline(nested_admin.NestedStackedInline):
     model = Question
     extra = 1
-    inlines = [OptionInline]
+    inlines = [OptionInline, SolutionBlockInline]
 
 @admin.register(Passage)
 class PassageAdmin(nested_admin.NestedModelAdmin):

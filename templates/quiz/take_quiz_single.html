@@ -1,0 +1,774 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load quiz_extras %}
+{% block content %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background: #f1f5f9;
+        margin: 0;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    /* Override base container for full width */
+    .container {
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        height: 100%;
+    }
+
+    .quiz-layout {
+        display: flex;
+        height: calc(100vh - 65px);
+        /* Header is ~65px */
+        overflow: hidden;
+        background: #f1f5f9;
+    }
+
+    .main-question-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: white;
+        margin: 16px;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        overflow: hidden;
+        position: relative;
+    }
+
+    .header-bar {
+        padding: 16px 24px;
+        background: #fff;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 10;
+    }
+
+    .timer-pill {
+        background: #0f172a;
+        color: white;
+        padding: 8px 20px;
+        border-radius: 9999px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.25rem;
+        font-weight: 700;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .question-content {
+        flex: 1;
+        padding: 24px 40px;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 transparent;
+    }
+
+    .question-content::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .question-content::-webkit-scrollbar-thumb {
+        background-color: #cbd5e1;
+        border-radius: 10px;
+    }
+
+    .passage-box {
+        background: #f8fafc;
+        border-left: 4px solid #3b82f6;
+        padding: 20px;
+        margin-bottom: 24px;
+        border-radius: 8px;
+        font-size: 1.05rem;
+        line-height: 1.7;
+        color: #334155;
+    }
+
+    .question-text {
+        font-size: 1.25rem;
+        font-weight: 600;
+        line-height: 1.6;
+        color: #1e293b;
+        margin-bottom: 24px;
+    }
+
+    .options-grid {
+        display: grid;
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .option-card {
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        background: white;
+    }
+
+    .option-card:hover {
+        border-color: #cbd5e1;
+        background: #f8fafc;
+        transform: translateX(4px);
+    }
+
+    .option-card.selected {
+        border-color: #3b82f6;
+        background: #eff6ff;
+        box-shadow: 0 0 0 1px #3b82f6;
+    }
+
+    .option-card input {
+        position: absolute;
+        opacity: 0;
+    }
+
+    .radio-circle,
+    .checkbox-square {
+        flex-shrink: 0;
+        width: 22px;
+        height: 22px;
+        border: 2px solid #cbd5e1;
+        margin-right: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: white;
+        transition: all 0.2s;
+    }
+
+    .radio-circle {
+        border-radius: 50%;
+    }
+
+    .checkbox-square {
+        border-radius: 4px;
+    }
+
+    .option-card.selected .radio-circle,
+    .option-card.selected .checkbox-square {
+        border-color: #3b82f6;
+    }
+
+    .option-card input:checked+.radio-circle::after {
+        content: '';
+        width: 12px;
+        height: 12px;
+        background: #3b82f6;
+        border-radius: 50%;
+    }
+
+    .option-card input:checked+.checkbox-square {
+        background: #3b82f6;
+        border-color: #3b82f6;
+    }
+
+    .option-card input:checked+.checkbox-square::after {
+        content: '✓';
+        color: white;
+        font-weight: 800;
+        font-size: 14px;
+    }
+
+    .footer-actions {
+        padding: 16px 24px;
+        background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 10;
+    }
+
+    .btn-quiz {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s;
+        text-transform: uppercase;
+        font-size: 0.875rem;
+        letter-spacing: 0.025em;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-save {
+        background: #10b981;
+        color: white;
+    }
+
+    .btn-save:hover {
+        background: #059669;
+        transform: translateY(-1px);
+    }
+
+    .btn-mark {
+        background: #f59e0b;
+        color: white;
+    }
+
+    .btn-mark:hover {
+        background: #d97706;
+        transform: translateY(-1px);
+    }
+
+    .btn-clear {
+        background: white;
+        color: #475569;
+        border: 1px solid #e2e8f0;
+    }
+
+    .btn-clear:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+    }
+
+    .btn-nav {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .btn-nav:hover {
+        background: #2563eb;
+        transform: translateY(-1px);
+    }
+
+    .btn-submit {
+        background: #ef4444;
+        color: white;
+        font-weight: 700;
+    }
+
+    .btn-submit:hover {
+        background: #dc2626;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.4);
+    }
+
+    .sidebar-area {
+        width: 360px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        margin: 16px 16px 16px 0;
+    }
+
+    .sidebar-card {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        overflow-y: auto;
+    }
+
+    .palette-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 12px;
+    }
+
+    .palette-item {
+        aspect-ratio: 1;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+        border: 2px solid transparent;
+    }
+
+    .palette-item:hover {
+        transform: scale(1.05);
+    }
+
+    .palette-item.active {
+        border-color: #0f172a;
+        box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.1);
+    }
+
+    .bg-nv {
+        background: #f8fafc;
+        color: #64748b;
+        border-color: #e2e8f0;
+    }
+
+    .bg-na {
+        background: #ef4444;
+        color: white;
+    }
+
+    .bg-a {
+        background: #10b981;
+        color: white;
+    }
+
+    .bg-m {
+        background: #8b5cf6;
+        color: white;
+    }
+
+    .bg-ma {
+        background: #8b5cf6;
+        color: white;
+        position: relative;
+    }
+
+    .bg-ma::after {
+        content: '✓';
+        position: absolute;
+        bottom: -2px;
+        right: -2px;
+        background: #10b981;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        font-size: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid white;
+    }
+
+    @media (max-width: 1024px) {
+        .sidebar-area {
+            display: none;
+        }
+
+        .quiz-layout {
+            padding: 0;
+        }
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(15, 23, 42, 0.7);
+        backdrop-filter: blur(4px);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.active {
+        display: flex;
+        opacity: 1;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        max-width: 450px;
+        width: 90%;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        transform: translateY(20px);
+        transition: transform 0.3s ease;
+        text-align: center;
+    }
+
+    .active .modal-content {
+        transform: translateY(0);
+    }
+
+    .modal-icon {
+        width: 60px;
+        height: 60px;
+        background: #eff6ff;
+        color: #3b82f6;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        font-size: 1.5rem;
+    }
+
+    .modal-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.75rem;
+    }
+
+    .modal-body {
+        font-size: 1rem;
+        color: #64748b;
+        margin-bottom: 2rem;
+        line-height: 1.5;
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+
+    .modal-btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+        font-size: 0.9375rem;
+    }
+
+    .modal-btn-confirm {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .modal-btn-confirm:hover {
+        background: #2563eb;
+    }
+
+    .modal-btn-cancel {
+        background: #f1f5f9;
+        color: #64748b;
+    }
+
+    .modal-btn-cancel:hover {
+        background: #e2e8f0;
+    }
+
+    .main-question-area {
+        margin: 0;
+        border-radius: 0;
+    }
+</style>
+<div class="quiz-layout">
+    <div class="main-question-area" id="mainArea" data-s="{{remaining_seconds|default:0}}">
+        <div class="header-bar">
+            <div style="font-size:1.25rem;font-weight:700">Question {{index}} of {{total}}</div>
+            <div class="timer-pill" id="timerBox">--:--</div>
+        </div>
+        <form method="post" id="qForm" class="question-content">
+            {% csrf_token %}
+            {% if question.passage %}
+            <div class="passage-box">
+                <h4 style="margin-top: 0; color: #3b82f6; margin-bottom: 12px;">{{ question.passage.title }}</h4>
+                {{question.passage.text|linebreaksbr}}
+                {% if question.passage.image %}
+                <div style="text-align:center; margin-top:20px;">
+                    <img src="{{question.passage.image.url}}"
+                        style="max-width:100%; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <div class="question-text">{{question.text|linebreaksbr}}</div>
+
+            {% if question.image %}
+            <div style="text-align:center;margin:24px 0">
+                <img src="{{question.image.url}}"
+                    style="max-width:100%;max-height:500px;border-radius:12px;box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            </div>
+            {% endif %}
+            {% if question.question_type == 'ASSERTION_REASON' %}
+            <div style="display:grid;gap:16px;margin-bottom:24px">
+                <div style="background:#f8fafc;padding:16px;border-radius:8px;border:1px solid #e2e8f0"><b>Assertion
+                        (A)</b>: {{question.assertion}}</div>
+                <div style="background:#f8fafc;padding:16px;border-radius:8px;border:1px solid #e2e8f0"><b>Reason
+                        (R)</b>: {{question.reason}}</div>
+            </div>
+            {% endif %}
+            <div class="options-grid">
+                {% with qt=question.question_type %}
+
+                {% if qt == 'MCQ_SINGLE' or qt == 'ASSERTION_REASON' or qt == 'MATRIX_SINGLE' %}
+
+                {% if qt == 'MATRIX_SINGLE' %}
+                <!-- Matrix Table for Matrix Single -->
+                {% with rows=question.matrix_rows.all cols=question.matrix_cols.all %}
+                {% if rows or cols %}
+                <div style="overflow-x: auto; margin-bottom: 24px;">
+                    <table class="matrix-table"
+                        style="width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0;">
+                        <thead>
+                            <tr style="background: #f8fafc;">
+                                <th style="padding: 12px; border: 1px solid #e2e8f0; width: 50%;">Column I</th>
+                                <th style="padding: 12px; border: 1px solid #e2e8f0; width: 50%;">Column II</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 12px; border: 1px solid #e2e8f0; vertical-align: top;">
+                                    {% for row in rows %}
+                                    <div style="margin-bottom: 12px;">
+                                        <strong>({{ row.label }})</strong> {{ row.text }}
+                                        {% if row.image %}<br><img src="{{ row.image.url }}"
+                                            style="max-height: 100px; margin-top: 4px;">{% endif %}
+                                    </div>
+                                    {% endfor %}
+                                </td>
+                                <td style="padding: 12px; border: 1px solid #e2e8f0; vertical-align: top;">
+                                    {% for col in cols %}
+                                    <div style="margin-bottom: 12px;">
+                                        <strong>({{ col.label }})</strong> {{ col.text }}
+                                        {% if col.image %}<br><img src="{{ col.image.url }}"
+                                            style="max-height: 100px; margin-top: 4px;">{% endif %}
+                                    </div>
+                                    {% endfor %}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+                {% endwith %}
+                {% endif %}
+
+                <div style="display: grid; gap: 12px;">
+                    {% for o in question.options.all %}
+                    {% with oid=o.id|stringformat:"s" %}
+                    <label class="option-card {% if response.answer_data.0 == oid %}selected{% endif %}">
+                        <input type="radio" name="question_{{question.id}}" value="{{o.id}}" {% if response.answer_data.0 == oid %}checked{% endif %} onchange="upd(this)">
+                        <div class="radio-circle"></div>
+                        <div style="flex:1">{{o.text}}{% if o.image %}<br><img src="{{o.image.url}}"
+                                style="max-height:150px">{% endif %}</div>
+                    </label>
+                    {% endwith %}
+                    {% endfor %}
+                </div>
+
+                {% elif qt == 'MCQ_MULTI' %}
+                <div style="display: grid; gap: 12px;">
+                    {% for o in question.options.all %}
+                    {% with oid=o.id|stringformat:"s" %}
+                    <label class="option-card {% if oid in response.answer_data %}selected{% endif %}">
+                        <input type="checkbox" name="question_{{question.id}}" value="{{o.id}}" {% if oid in response.answer_data %}checked{% endif %} onchange="upd(this)">
+                        <div class="checkbox-square"></div>
+                        <div style="flex:1">{{o.text}}{% if o.image %}<br><img src="{{o.image.url}}"
+                                style="max-height:150px">{% endif %}</div>
+                    </label>
+                    {% endwith %}
+                    {% endfor %}
+                </div>
+
+                {% elif qt == 'NUMERICAL' %}
+                <div style="background: #f8fafc; padding: 24px; border-radius: 12px; border: 2px solid #e2e8f0;">
+                    <label style="font-weight: 700; margin-bottom: 12px; display: block; color: #475569;">Enter
+                        Numerical Answer:</label>
+                    <input type="number" step="any" name="question_{{question.id}}"
+                        value="{{response.answer_data.0|default:''}}" placeholder="0.00"
+                        style="padding: 16px; border: 2px solid #3b82f6; border-radius: 8px; width: 100%; font-size: 1.25rem; font-weight: 600;">
+                </div>
+
+                {% elif qt == 'MATRIX' %}
+                {% with rows=question.matrix_rows.all cols=question.matrix_cols.all %}
+                <div style="overflow-x: auto; margin-bottom: 24px;">
+                    <table class="matrix-table"
+                        style="width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0;">
+                        <thead>
+                            <tr style="background: #f8fafc;">
+                                <th style="padding: 12px; border: 1px solid #e2e8f0; width: 50%;">Column I</th>
+                                <th style="padding: 12px; border: 1px solid #e2e8f0; width: 50%;">Column II</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 12px; border: 1px solid #e2e8f0; vertical-align: top;">
+                                    {% for row in rows %}
+                                    <div style="margin-bottom: 12px;">
+                                        <strong>({{ row.label }})</strong> {{ row.text }}
+                                        {% if row.image %}<br><img src="{{ row.image.url }}"
+                                            style="max-height: 100px; margin-top: 4px;">{% endif %}
+                                    </div>
+                                    {% endfor %}
+                                </td>
+                                <td style="padding: 12px; border: 1px solid #e2e8f0; vertical-align: top;">
+                                    {% for col in cols %}
+                                    <div style="margin-bottom: 12px;">
+                                        <strong>({{ col.label }})</strong> {{ col.text }}
+                                        {% if col.image %}<br><img src="{{ col.image.url }}"
+                                            style="max-height: 100px; margin-top: 4px;">{% endif %}
+                                    </div>
+                                    {% endfor %}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="background: #f8fafc; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                    <h5
+                        style="margin: 0 0 16px 0; font-size: 0.9rem; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em;">
+                        Select Correct Matches</h5>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; text-align: center; border-collapse: collapse;">
+                            <thead>
+                                <tr>
+                                    <th style="padding: 12px; background: white; border-bottom: 2px solid #e2e8f0;">Row
+                                        \ Col</th>
+                                    {% for col in cols %}
+                                    <th style="padding: 12px; background: white; border-bottom: 2px solid #e2e8f0;">{{
+                                        col.label }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in rows %}
+                                <tr>
+                                    <td style="padding: 12px; font-weight: 700; border-bottom: 1px solid #f1f5f9;">{{
+                                        row.label }}</td>
+                                    {% for col in cols %}
+                                    <td style="padding: 12px; border-bottom: 1px solid #f1f5f9;">
+                                        <input type="checkbox" name="question_{{ question.id }}_row_{{ row.label }}" value="{{ col.label }}" {% with row_ans=response.answer_data|dict_get:row.label %}{% if col.label in row_ans %}checked{% endif %}{% endwith %} style="width: 20px; height: 20px; cursor: pointer; accent-color: #3b82f6;">
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endwith %}
+                {% endif %}
+
+                {% endwith %}
+            </div>
+        </form>
+        <div class="footer-actions">
+            <div style="display:flex;gap:12px">
+                <button type="submit" form="qForm" name="action" value="save_next" class="btn-quiz btn-save">Save &
+                    Next</button>
+                <button type="submit" form="qForm" name="action" value="clear" class="btn-quiz btn-clear">Clear</button>
+                <button type="submit" form="qForm" name="action" value="save_mark" class="btn-quiz btn-mark">Mark &
+                    Save</button>
+                <button type="submit" form="qForm" name="action" value="mark_next" class="btn-quiz btn-nav">Mark &
+                    Next</button>
+            </div>
+            <div style="display:flex;gap:12px">
+                {% if index > 1 %}<a href="{% url 'take_quiz_single' quiz.id index|add:'-1' %}"
+                    class="btn-quiz btn-clear">Back</a>{% endif %}
+                {% if index < total %}<a href="{% url 'take_quiz_single' quiz.id index|add:'1' %}"
+                    class="btn-quiz btn-clear">Next</a>{% endif %}
+                    <button type="button" onclick="sub()" class="btn-quiz btn-submit">Submit</button>
+            </div>
+        </div>
+    </div>
+    <div class="sidebar-area">
+        <div class="sidebar-card">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div style="display:flex;align-items:center;gap:8px">
+                    <div class="stat-num bg-a">{{stats.ANSWERED}}</div>Ans
+                </div>
+                <div style="display:flex;align-items:center;gap:8px">
+                    <div class="stat-num bg-na">{{stats.NOT_ANSWERED}}</div>N-Ans
+                </div>
+                <div style="display:flex;align-items:center;gap:8px">
+                    <div class="stat-num bg-nv" style="background:#fff;border:1px solid #ccc;color:#000">
+                        {{stats.NOT_VISITED}}</div>N-Vis
+                </div>
+                <div style="display:flex;align-items:center;gap:8px">
+                    <div class="stat-num bg-m">{{stats.MARKED_FOR_REVIEW}}</div>Mark
+                </div>
+            </div>
+            <div class="palette-grid">
+                {% for itm in palette %}
+                <a href="{% url 'take_quiz_single' quiz.id itm.index %}"
+                    class="palette-item {% if itm.status == 'NOT_VISITED' %}bg-nv{% elif itm.status == 'NOT_ANSWERED' %}bg-na{% elif itm.status == 'ANSWERED' %}bg-a{% elif itm.status == 'MARKED_FOR_REVIEW' %}bg-m{% elif itm.status == 'ANSWERED_MARKED' %}bg-ma{% endif %} {% if itm.is_current %}active{% endif %}">{{itm.index}}</a>
+                {% endfor %}
+            </div>
+        </div>
+        <button onclick="sub()" class="btn-quiz btn-submit" style="width:100%;margin-top:20px;height:50px">Final
+            Submit</button>
+    </div>
+</div>
+<div id="customModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-icon">?</div>
+        <div class="modal-title" id="modalTitle">Confirm Submission</div>
+        <div class="modal-body" id="modalBody">Are you sure you want to submit? This will end your quiz attempt and you
+            won't be able to change your answers.</div>
+        <div class="modal-actions" id="modalActions">
+            <button class="modal-btn modal-btn-cancel" id="modalCancel">Cancel</button>
+            <button class="modal-btn modal-btn-confirm" id="modalConfirm">Yes, Submit</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function upd(i) { p = i.closest('.options-grid'); p.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected')); if (i.checked) { i.closest('.option-card').classList.add('selected'); } }
+
+    // Modal Logic
+    const modal = document.getElementById('customModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+    const modalConfirm = document.getElementById('modalConfirm');
+    const modalCancel = document.getElementById('modalCancel');
+
+    function showModal(title, body, onConfirm, showCancel = true) {
+        modalTitle.innerText = title;
+        modalBody.innerText = body;
+        modalCancel.style.display = showCancel ? 'block' : 'none';
+        modalConfirm.innerText = showCancel ? 'Yes, Submit' : 'OK';
+
+        modal.classList.add('active');
+
+        // Clone to remove previous listeners
+        const newConfirm = modalConfirm.cloneNode(true);
+        modalConfirm.parentNode.replaceChild(newConfirm, modalConfirm);
+
+        // Re-select the new button
+        const currentConfirm = document.getElementById('modalConfirm');
+
+        currentConfirm.addEventListener('click', () => {
+            modal.classList.remove('active');
+            onConfirm();
+        });
+
+        modalCancel.onclick = () => {
+            modal.classList.remove('active');
+        };
+    }
+
+    function sub() {
+        showModal(
+            "Submit Quiz?",
+            "Are you sure you want to submit your final answers? This cannot be undone.",
+            () => {
+                f = document.getElementById('qForm');
+                h = document.createElement('input');
+                h.type = 'hidden';
+                h.name = 'action';
+                h.value = 'submit';
+                f.appendChild(h);
+                f.submit();
+            }
+        );
+    }
+
+    main = document.getElementById('mainArea'); timer = document.getElementById('timerBox'); s = parseInt(main.dataset.s);
+    function tick() { if (s <= 0) { timer.innerText = "00:00"; document.getElementById('qForm').submit(); return; } m = Math.floor(s / 60); sec = s % 60; timer.innerText = (m < 10 ? "0" + m : m) + ":" + (sec < 10 ? "0" + sec : sec); s--; }
+    setInterval(tick, 1000); tick();
+</script>
+{% endblock %}

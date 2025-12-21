@@ -17,6 +17,7 @@ class Question(models.Model):
         MATRIX = 'MATRIX', 'Matrix Match'
         MATRIX_SINGLE = 'MATRIX_SINGLE', 'Matrix Single'
         TRUE_FALSE = 'TRUE_FALSE', 'True/False'
+        ASSERTION_REASON = 'ASSERTION_REASON', 'Assertion-Reason'
 
     CHAPTER_CHOICES = [
         ('VECTORS', 'Vectors'),
@@ -53,9 +54,12 @@ class Question(models.Model):
         ('VERY_DIFFICULT', 'Very Difficult'),
     ]
 
-    text = models.TextField(help_text="Question text (LaTeX supported)")
+    text = models.TextField(help_text="Question text (LaTeX supported)", blank=True)
+    assertion = models.TextField(blank=True, null=True, help_text="Assertion text (for Assertion-Reason questions)")
+    reason = models.TextField(blank=True, null=True, help_text="Reason text (for Assertion-Reason questions)")
     image = models.ImageField(upload_to='questions/', blank=True, null=True)
     question_type = models.CharField(max_length=20, choices=Type.choices)
+    allow_partial_marking = models.BooleanField(default=True, help_text="For MCQ Multi: If true, partial marks are awarded. If false, only full marks or negative marks.")
     
     # New Fields
     chapter = models.CharField(max_length=50, choices=CHAPTER_CHOICES, blank=True, null=True)
@@ -114,6 +118,9 @@ class Quiz(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     questions = models.ManyToManyField(Question, through='QuizQuestion')
+    passages = models.ManyToManyField('Passage', blank=True, help_text="Select passages to add all their questions to the quiz automatically.")
+    assigned_groups = models.ManyToManyField('auth.Group', related_name='quizzes', blank=True, help_text="Batches/Groups this quiz is assigned to")
+    assigned_students = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='assigned_quizzes', blank=True, help_text="Individual students this quiz is assigned to")
     time_limit_minutes = models.IntegerField(default=60)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -131,10 +138,21 @@ class Attempt(models.Model):
         return f"{self.user.username} - {self.quiz.title}"
 
 class Response(models.Model):
+    class QuestionStatus(models.TextChoices):
+        NOT_VISITED = 'NOT_VISITED', 'Not Visited'
+        NOT_ANSWERED = 'NOT_ANSWERED', 'Not Answered'
+        ANSWERED = 'ANSWERED', 'Answered'
+        MARKED_FOR_REVIEW = 'MARKED_FOR_REVIEW', 'Marked for Review'
+        ANSWERED_MARKED = 'ANSWERED_MARKED', 'Answered & Marked for Review'
+
     attempt = models.ForeignKey(Attempt, on_delete=models.CASCADE, related_name='responses')
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     # Store answer as JSON to handle multiple options, numerical values, or matrix matches
     answer_data = models.JSONField(null=True, blank=True)
+    status = models.CharField(max_length=20, choices=QuestionStatus.choices, default=QuestionStatus.NOT_VISITED)
+
+    class Meta:
+        unique_together = ('attempt', 'question')
 
 class QuizQuestion(models.Model):
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
@@ -148,3 +166,15 @@ class QuizQuestion(models.Model):
 
     def __str__(self):
         return f"{self.quiz.title} - {self.question}"
+
+class SolutionBlock(models.Model):
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='solution_blocks')
+    text = models.TextField(blank=True, help_text="Text content (LaTeX supported)")
+    image = models.ImageField(upload_to='solutions/', blank=True, null=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
+
+    def __str__(self):
+        return f"Solution Block {self.order} for {self.question}"

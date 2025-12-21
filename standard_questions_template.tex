@@ -1,0 +1,94 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{amsmath}
+
+\begin{document}
+
+% ==========================================
+% MCQ SINGLE CORRECT EXAMPLE
+% ==========================================
+\begin{question}
+    \type{MCQ_SINGLE}
+    \chapter{KINEMATICS_1D}
+    \difficulty{EASY}
+    \text{A particle moves with constant acceleration $a = 2 \, m/s^2$. If it starts from rest, what is its velocity after $t=5$ seconds?}
+    \option{A}{10 m/s}
+    \option{B}{25 m/s}
+    \option{C}{5 m/s}
+    \option{D}{50 m/s}
+    \answer{A}
+    \solution{
+        Using the equation $v = u + at$:
+        $$ v = 0 + 2(5) = 10 \, m/s $$
+        \includegraphics{solution_chart.png}
+    }
+\end{question}
+
+% ==========================================
+% MCQ MULTI CORRECT EXAMPLE
+% ==========================================
+\begin{question}
+    \type{MCQ_MULTI}
+    \chapter{NEWTONS_LAWS}
+    \difficulty{MODERATE}
+    \text{Which of the following statements are correct regarding friction?}
+    \option{A}{Static friction is a self-adjusting force.}
+    \option{B}{Kinetic friction is always less than limiting static friction.}
+    \option{C}{Coefficient of friction depends on the area of contact.}
+    \option{D}{Friction always opposes relative motion.}
+    \answer{A,B,D}
+    \solution{
+        Static friction adjusts up to a limit. Kinetic friction is generally lower. Friction opposes relative motion. It is independent of area of contact.
+    }
+\end{question}
+
+% ==========================================
+% NUMERICAL EXAMPLE
+% ==========================================
+\begin{question}
+    \type{NUMERICAL}
+    \chapter{ELECTROSTATICS}
+    \difficulty{DIFFICULT}
+    \text{Two point charges $+2\mu C$ and $+4\mu C$ are placed 10cm apart. Find the magnitude of force between them in Newtons. (Take $k = 9 \times 10^9$)}
+    \answer{7.2}
+    \tolerance{0.1}
+    \solution{
+        Force $F = \frac{k q_1 q_2}{r^2}$
+        $$ F = \frac{9 \times 10^9 \times 2 \times 10^{-6} \times 4 \times 10^{-6}}{(0.1)^2} $$
+        $$ F = 7.2 \, N $$
+    }
+\end{question}
+
+% ==========================================
+% MATRIX MATCH EXAMPLE
+% ==========================================
+\begin{question}
+    \type{MATRIX}
+    \chapter{MODERN_PHYSICS}
+    \difficulty{MODERATE}
+    \text{Match the physical quantities with their units:}
+    
+    % Rows (Left Side)
+    \row{A}{Planck's Constant (h) \includegraphics{test_image.png}}
+    \row{B}{Work Function ($\phi$)}
+    \row{C}{Threshold Frequency ($v_0$)}
+    
+    % Columns (Right Side)
+    \col{p}{Joule (J)}
+    \col{q}{Hertz (Hz)}
+    \col{r}{Joule-second (J-s)}
+    \col{s}{Electron-Volt (eV)}
+    
+    % Correct Matches (Row -> Col/s)
+    \matrix_answer{A}{r}
+    \matrix_answer{B}{p,s}   % Can match multiple
+    \matrix_answer{C}{q}
+    
+    \solution{
+        $h$ has units $J \cdot s$.
+        Work function is energy, so $J$ or $eV$.
+        Frequency is $Hz$.
+    }
+\end{question}
+
+\end{document}

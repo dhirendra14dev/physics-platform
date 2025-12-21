@@ -1,0 +1,13 @@
+{
+    "files.associations": {
+        "**/*.html": "django-html",
+        "**/templates/**/*.html": "django-html"
+    },
+    "emmet.includeLanguages": {
+        "django-html": "html"
+    },
+    "[django-html]": {
+        "editor.defaultFormatter": "batisteo.vscode-django"
+    },
+    "editor.formatOnSave": false
+}

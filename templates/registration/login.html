@@ -1,11 +1,38 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h2>Login</h2>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn">Login</button>
-</form>
-<p>Don't have an account? <a href="{% url 'signup' %}">Sign up here</a>.</p>
+<div style="max-width: 480px; margin: 4rem auto;">
+    <div class="page-card" style="padding: 3rem;">
+        <div style="text-align: center; margin-bottom: 2.5rem;">
+            <h1 style="margin-bottom: 0.5rem; font-size: 2rem;">Welcome Back</h1>
+            <p class="text-secondary">Sign in to continue your learning journey.</p>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                <div class="alert alert-error" style="padding: 0.5rem; margin-top: 0.5rem; font-size: 0.85rem;">{{
+                    field.errors }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <button type="submit" class="btn btn-primary"
+                style="width: 100%; height: 50px; font-size: 1rem; margin-top: 1rem;">
+                Sign In
+            </button>
+        </form>
+
+        <div style="text-align: center; margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+            <p class="text-secondary" style="font-size: 0.95rem;">
+                Don't have an account? <a href="{% url 'signup' %}"
+                    style="font-weight: 700; color: var(--primary); text-decoration: none;">Join PhysicsCraft</a>
+            </p>
+        </div>
+    </div>
+</div>
 {% endblock %}

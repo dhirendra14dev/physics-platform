@@ -1,10 +1,452 @@
 {% extends 'base.html' %}
-
+{% load quiz_extras %}
 {% block content %}
-<h2>Quiz Result</h2>
-<p><strong>Quiz:</strong> {{ attempt.quiz.title }}</p>
-<p><strong>Score:</strong> {{ attempt.score }}</p>
-<p><strong>Completed At:</strong> {{ attempt.completed_at }}</p>
+<style>
+    .result-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
 
-<a href="{% url 'dashboard' %}" class="btn">Back to Dashboard</a>
+    .perf-card {
+        text-align: center;
+        padding: 4rem 2rem;
+        margin-bottom: 3rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .perf-bg-circle-1 {
+        position: absolute;
+        top: -50px;
+        left: -50px;
+        width: 200px;
+        height: 200px;
+        background: rgba(59, 130, 246, 0.05);
+        border-radius: 50%;
+    }
+
+    .perf-bg-circle-2 {
+        position: absolute;
+        bottom: -50px;
+        right: -50px;
+        width: 200px;
+        height: 200px;
+        background: rgba(16, 185, 129, 0.05);
+        border-radius: 50%;
+    }
+
+    .perf-header {
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+    }
+
+    .score-display {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 1.5rem 0;
+    }
+
+    .score-value {
+        font-size: 5rem;
+        font-weight: 900;
+        line-height: 1;
+        color: var(--primary);
+        letter-spacing: -0.05em;
+    }
+
+    .score-label {
+        font-weight: 600;
+        margin-top: 0.5rem;
+        font-size: 1.125rem;
+    }
+
+    .meta-row {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .meta-item {
+        text-align: center;
+    }
+
+    .meta-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        font-weight: 800;
+    }
+
+    .meta-val {
+        font-weight: 700;
+    }
+
+    .q-card {
+        padding: 0;
+        overflow: hidden;
+        margin-bottom: 2.5rem;
+    }
+
+    .q-header {
+        background: #f8fafc;
+        padding: 1rem 2rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .q-title {
+        font-weight: 800;
+        font-size: 1rem;
+        color: var(--text-main);
+    }
+
+    .q-type {
+        font-size: 0.85rem;
+    }
+
+    .q-status {
+        padding: 6px 16px;
+        color: white;
+    }
+
+    .q-body {
+        padding: 2.5rem;
+    }
+
+    .q-text {
+        font-size: 1.15rem;
+        font-weight: 500;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+
+    .q-img {
+        max-width: 100%;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        margin-top: 1.5rem;
+    }
+
+    .ar-block {
+        background: #f8fafc;
+        border: 1px solid var(--border);
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+    }
+
+    .ar-label {
+        font-weight: 800;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+    }
+
+    .ar-content {
+        font-size: 1rem;
+        margin-top: 4px;
+    }
+
+    .resp-header {
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.1em;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+    }
+
+    .unattempted-box {
+        padding: 1.5rem;
+        border: 2px dashed var(--border);
+        border-radius: 12px;
+        text-align: center;
+        color: var(--text-muted);
+    }
+
+    .opt-row {
+        padding: 1rem 1.25rem;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
+
+    .opt-row.correct {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+    }
+
+    .opt-row.incorrect {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+    }
+
+    .opt-icon {
+        font-weight: 800;
+    }
+
+    .opt-icon.correct {
+        color: #166534;
+    }
+
+    .opt-icon.incorrect {
+        color: #991b1b;
+    }
+
+    .opt-text {
+        font-weight: 500;
+    }
+
+    .opt-text.correct {
+        color: #166534;
+    }
+
+    .opt-text.incorrect {
+        color: #991b1b;
+    }
+
+    .user-choice-badge {
+        background: rgba(0, 0, 0, 0.05);
+        color: var(--text-secondary);
+        font-size: 0.7rem;
+    }
+
+    .num-box {
+        flex: 1;
+        padding: 1.25rem;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+    }
+
+    .num-val {
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    .sol-block {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .sol-header {
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.1em;
+        color: var(--primary);
+        margin-bottom: 1.5rem;
+    }
+
+    .sol-text {
+        margin-bottom: 1.5rem;
+        line-height: 1.7;
+        color: var(--text-secondary);
+    }
+</style>
+
+<div class="result-container">
+    <div class="page-card perf-card">
+        <div class="perf-bg-circle-1"></div>
+        <div class="perf-bg-circle-2"></div>
+        <p class="text-secondary perf-header">Performance Snapshot</p>
+        <h1 style="margin-bottom: 1rem;">{{ attempt.quiz.title }}</h1>
+        <div class="score-display">
+            <div class="score-value">{{ attempt.score|floatformat:1 }}</div>
+            <p class="text-muted score-label">Total points earned</p>
+        </div>
+        <div class="meta-row">
+            <div class="meta-item">
+                <p class="text-muted meta-label">Date</p>
+                <p class="meta-val">{{ attempt.completed_at|date:"M d, Y" }}</p>
+            </div>
+            <div style="width: 1px; background: var(--border);"></div>
+            <div class="meta-item">
+                <p class="text-muted meta-label">Time</p>
+                <p class="meta-val">{{ attempt.completed_at|date:"H:i" }}</p>
+            </div>
+        </div>
+        <div style="margin-top: 3rem;">
+            <a href="{% url 'dashboard' %}" class="btn btn-primary" style="padding: 1rem 2.5rem;">Return to
+                Dashboard</a>
+        </div>
+    </div>
+
+    <h2 style="margin-bottom: 2rem;">Question Breakdown</h2>
+
+    {% for res in responses %}
+    {% ifchanged res.question.passage %}
+    {% if res.question.passage %}
+    <div class="page-card"
+        style="padding: 2.5rem; margin-bottom: 2rem; background: #eff6ff; border-left: 6px solid #3b82f6;">
+        <h4 style="margin-top: 0; color: #1e40af; display: flex; align-items: center; gap: 8px;">
+            <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                </path>
+            </svg>
+            {{ res.question.passage.title }}
+        </h4>
+        <div style="line-height: 1.8; color: #1e3a8a; font-size: 1.05rem;">
+            {{ res.question.passage.text|safe|linebreaks }}
+        </div>
+        {% if res.question.passage.image %}
+        <div style="margin-top: 1.5rem; text-align: center;">
+            <img src="{{ res.question.passage.image.url }}"
+                style="max-width: 100%; border-radius: 12px; border: 1px solid #bfdbfe;">
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+    {% endifchanged %}
+
+    <div class="page-card q-card" style="border-left: 6px solid {{ res.status_color }};">
+        <div class="q-header">
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <span class="q-title">Question {{ forloop.counter }}</span>
+                <span class="text-muted q-type">({{ res.question.get_question_type_display }})</span>
+            </div>
+            <span class="badge q-status" style="background: {{ res.status_color }};">{{ res.status }}</span>
+        </div>
+
+        <div class="q-body">
+            <div class="q-text">
+                {{ res.question.text|safe }}
+                {% if res.question.image %}
+                <div style="margin-top: 1.5rem; text-align: center;">
+                    <img src="{{ res.question.image.url }}" class="q-img">
+                </div>
+                {% endif %}
+            </div>
+
+            {% if res.question.question_type == 'ASSERTION_REASON' %}
+            <div class="ar-block">
+                <div style="margin-bottom: 1rem;">
+                    <span class="ar-label">Assertion</span>
+                    <p class="ar-content">{{ res.question.assertion }}</p>
+                </div>
+                <div style="padding-top: 1rem; border-top: 1px dashed var(--border);">
+                    <span class="ar-label">Reason</span>
+                    <p class="ar-content">{{ res.question.reason }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <div style="margin: 2rem 0;">
+                <h5 class="resp-header">Your Response & Analysis</h5>
+
+                {% if res.status == 'unattempted' %}
+                <div class="unattempted-box">
+                    You did not attempt this question.
+                </div>
+                {% else %}
+                <div style="display: grid; gap: 0.75rem;">
+                    {% with qt=res.question.question_type %}
+                    {% if qt == 'MCQ_SINGLE' or qt == 'MCQ_MULTI' or qt == 'ASSERTION_REASON' %}
+                    {% for o in res.question.options.all %}
+                    {% if o.is_correct or o in res.user_display_options %}
+                    <div class="opt-row {{ o.is_correct|yesno:'correct,incorrect' }}">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span class="opt-icon {{ o.is_correct|yesno:'correct,incorrect' }}">
+                                {{ o.is_correct|yesno:'✓,✗' }}
+                            </span>
+                            <span class="opt-text {{ o.is_correct|yesno:'correct,incorrect' }}">{{ o.text }}</span>
+                        </div>
+                        {% if o in res.user_display_options %}
+                        <span class="badge user-choice-badge">Your Choice</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                    {% elif qt == 'NUMERICAL' %}
+                    <div style="display: flex; gap: 1rem;">
+                        <div class="num-box" style="background: #f8fafc;">
+                            <span class="ar-label">Your Entry</span>
+                            <p class="num-val">{{ res.user_text_answer }}</p>
+                        </div>
+                        <div class="num-box" style="background: #f0fdf4; border-color: #bbf7d0;">
+                            <span class="ar-label" style="color: #166534;">Correct Answer</span>
+                            <p class="num-val" style="color: #166534;">
+                                {{ res.question.numerical_answer }}
+                                <span style="font-size: 0.9rem; font-weight: 400;">(+/- {{
+                                    res.question.numerical_tolerance }})</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    {% elif qt == 'MATRIX' %}
+                    <div class="matrix-result-block" style="overflow-x: auto; margin-top: 1rem;">
+                        <table class="table table-bordered" style="width: 100%; border: 1px solid #e5e7eb;">
+                            <thead>
+                                <tr style="background: #f9fafb;">
+                                    <th style="padding: 0.75rem;">Row / Col</th>
+                                    {% for col in res.question.matrix_cols.all %}
+                                    <th style="padding: 0.75rem;">{{ col.label }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in res.question.matrix_rows.all %}
+                                <tr>
+                                    <td style="padding: 0.75rem; font-weight: 600;">{{ row.label }}</td>
+                                    {% for col in res.question.matrix_cols.all %}
+                                    <td style="padding: 0.75rem; text-align: center;">
+                                        {% with user_ans=res.answer_data|dict_get:row.label %}
+                                        {% if user_ans and col.label in user_ans %}
+                                        <span
+                                            style="background: #3b82f6; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem;">You</span>
+                                        {% else %}
+                                        <span style="color: #d1d5db;">-</span>
+                                        {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <div
+                            style="background: #f0fdf4; padding: 1rem; border-radius: 8px; margin-top: 1rem; border: 1px solid #bbf7d0;">
+                            <h6 style="color: #166534; margin: 0 0 0.5rem 0;">Correct Matches:</h6>
+                            <ul style="margin: 0; padding-left: 1.2rem; color: #15803d;">
+                                {% for row in res.question.matrix_rows.all %}
+                                <li style="margin-bottom: 0.25rem;"><strong>{{ row.label }}</strong> &rarr; {{
+                                    row.matches }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                </div>
+                {% endif %}
+            </div>
+
+            {% if res.question.solution_blocks.all %}
+            <div class="sol-block">
+                <h5 class="sol-header">Step-by-Step Solution</h5>
+                {% for sol in res.question.solution_blocks.all %}
+                <div class="sol-text">
+                    {{ sol.text|safe }}
+                    {% if sol.image %}
+                    <img src="{{ sol.image.url }}" class="q-img">
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+
+    <div style="text-align: center; margin: 4rem 0;">
+        <a href="{% url 'dashboard' %}" class="btn btn-secondary">Return to My Dashboard</a>
+    </div>
+</div>
 {% endblock %}

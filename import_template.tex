@@ -1,0 +1,73 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Physics Platform - Standard Question Import Template (LaTeX)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% This file defines the standard format for importing questions.
+% Tags: 
+%   \begin{question} ... \end{question} : defines a question block
+%   \type{MCQ_SINGLE|MCQ_MULTI|NUMERICAL|MATRIX|ASSERTION_REASON}
+%   \chapter{VECTORS|KINEMATICS_1D|...} (See quiz/models.py for all keys)
+%   \difficulty{VERY_EASY|EASY|MODERATE|DIFFICULT|VERY_DIFFICULT}
+%   \partial_marking{true|false} (Optional, default true - for MCQ_MULTI only)
+%   \text{Question text with LaTeX and \includegraphics{path/to/img}}
+%   \assertion{Assertion text (for ASSERTION_REASON only)}
+%   \reason{Reason text (for ASSERTION_REASON only)}
+%   \option{Label}{Option text} (Use labels A, B, C, D)
+%   \answer{Label/Value} (e.g. A for MCQ, p,q for Matrix match, 10.5 for Numerical)
+%   \row{Label}{Text} (For Matrix rows: A, B, C, D)
+%   \col{Label}{Text} (For Matrix cols: p, q, r, s)
+%   \solution{Text/LaTeX content}
+%   \sol_image{path/to/img}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{question}
+    \type{MCQ_SINGLE}
+    \chapter{KINEMATICS_1D}
+    \difficulty{EASY}
+    \text{A car starts from rest and accelerates at $2 \text{ m/s}^2$. What is its velocity after 5 seconds?}
+    \option{A}{5 m/s}
+    \option{B}{10 m/s}
+    \option{C}{15 m/s}
+    \option{D}{20 m/s}
+    \answer{B}
+    \solution{Using $v = u + at$: $v = 0 + (2)(5) = 10 \text{ m/s}$.}
+\end{question}
+
+\begin{question}
+    \type{ASSERTION_REASON}
+    \chapter{NEWTONS_LAWS}
+    \difficulty{MODERATE}
+    \assertion{Plastics impact animals and the environment.}
+    \reason{Many animals consume plastic as a food and eat it by accident.}
+    \option{1}{Both A and R are true and R is the correct explanation of A.}
+    \option{2}{Both A and R are true but R is not the correct explanation of A.}
+    \option{3}{A is true but R is false.}
+    \option{4}{Both A and R are false.}
+    \answer{1}
+    \solution{Plastics are non-biodegradable and animals often mistake them for food, leading to ingestion and ecosystem damage.}
+\end{question}
+
+\begin{question}
+    \type{NUMERICAL}
+    \chapter{ELECTROSTATICS}
+    \difficulty{DIFFICULT}
+    \text{Calculate the force between two charges of 1C each separated by 1m in vacuum. (Use $k = 9 \times 10^9$)}
+    \answer{9.0e9}
+    \solution{Using Coulomb's Law: $F = k \cdot \frac{q_1 q_2}{r^2} = 9 \times 10^9 \cdot \frac{1 \cdot 1}{1^2} = 9 \times 10^9 \text{ N}$.}
+\end{question}
+
+\begin{question}
+    \type{MATRIX}
+    \chapter{HEAT_THERMODYNAMICS}
+    \difficulty{MODERATE}
+    \text{Match the thermodynamic processes in List-I with their characteristics in List-II.}
+    \row{A}{Isothermal}
+    \row{B}{Adiabatic}
+    \row{C}{Isobaric}
+    \row{D}{Isochoric}
+    \col{p}{$\Delta Q = \Delta W$}
+    \col{q}{$dQ = 0$}
+    \col{r}{$dP = 0$}
+    \col{s}{$dV = 0$}
+    \answer{(A)-p, (B)-q, (C)-r, (D)-s}
+    \solution{Basic definitions of thermodynamic processes.}
+\end{question}

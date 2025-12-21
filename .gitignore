@@ -20,3 +20,18 @@ venv.bak/
 
 # macOS
 .DS_Store
+
+# Temporary Scripts
+fix_matrix_template.py
+fix_template.py
+fix_template_tags.py
+fix_template_v2.py
+repro_matrix_bug.py
+rollback_db.py
+tmp_debug.txt
+verify_*.py
+ngrok
+ngrok-v3-stable-darwin-arm64.zip
+mathpix_automator/
+earthz_scraper/
+convert_latex.py
