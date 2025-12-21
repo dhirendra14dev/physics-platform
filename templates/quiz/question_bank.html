@@ -83,15 +83,10 @@
         <div
             style="background: #f8fafc; padding: 1rem 1.75rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
             <div style="display: flex; gap: 10px; align-items: center;">
-                <span class="badge"
-                    style="background: white; border: 1px solid var(--border); color: var(--text-secondary); font-weight: 700;">Q.{{
-                    q.id }}</span>
-                <span
-                    style="font-weight: 700; color: var(--primary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">{{
-                    q.get_question_type_display }}</span>
+                <span class="badge" style="background: white; border: 1px solid var(--border); color: var(--text-secondary); font-weight: 700;">Q.{{ q.id }}</span>
+                <span style="font-weight: 700; color: var(--primary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">{{ q.get_question_type_display }}</span>
                 <span style="color: var(--text-muted); font-size: 1.2rem; transform: translateY(-2px);">&middot;</span>
-                <span class="text-secondary" style="font-weight: 600; font-size: 0.85rem;">{{ q.get_chapter_display
-                    }}</span>
+                <span class="text-secondary" style="font-weight: 600; font-size: 0.85rem;">{{ q.get_chapter_display }}</span>
             </div>
             <span
                 class="badge {% if q.difficulty == 'EASY' or q.difficulty == 'VERY_EASY' %}badge-success{% else %}badge-warning{% endif %}">
